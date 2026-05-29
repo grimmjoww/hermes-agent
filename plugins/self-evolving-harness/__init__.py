@@ -57,6 +57,8 @@ try:  # pragma: no cover - exercised by both load paths
     from .harness_core.controller import HarnessController
     from .harness_core.events import Event, EventKind, EventStream
     from .harness_core.layers.h4_trajectory import Correction, ToolCall
+    from .harness_core.program_function import AgentState
+    from .skill_program_library import build_skill_pf_registry
 except ImportError:  # standalone import (no parent package)
     import os
     import sys
@@ -65,6 +67,8 @@ except ImportError:  # standalone import (no parent package)
     from harness_core.controller import HarnessController
     from harness_core.events import Event, EventKind, EventStream
     from harness_core.layers.h4_trajectory import Correction, ToolCall
+    from harness_core.program_function import AgentState
+    from skill_program_library import build_skill_pf_registry
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +116,13 @@ class HarnessPlugin:
         # Cap per-session buffer so a long session can't grow unbounded; the
         # H4 detector only ever inspects the trailing `threshold` calls.
         self._max_buffer = 256
+        # The ten real-Hermes skills, converted to HASP Program Functions and
+        # managed by a PFRegistry exactly like an evolved PF. Applied in
+        # pre_tool_call. Lazy/defensive so a missing module can't break load.
+        try:
+            self.skill_pfs = build_skill_pf_registry()
+        except Exception:  # pragma: no cover - defensive
+            self.skill_pfs = None
 
     # -- visible-surface wiring ------------------------------------------------
 
@@ -156,12 +167,41 @@ class HarnessPlugin:
         tool_call_id: str = "",
         **_: Any,
     ) -> Optional[Dict[str, str]]:
-        # H2 is OFF by default (controller.enabled & h2). When an evolved H2 rule
-        # turns the layer on, a contract check would run here and return a block
-        # directive. Paper-faithful: BLOCK-only, no silent action rewrite.
-        if not self.controller._active(self.controller.h2):
+        # Run the candidate call through the ten converted-skill HASP PFs. The
+        # registry returns the first activating PF's structured intervention.
+        # Paper-faithful: BLOCK-only on the live hook — a ContextInjection PF
+        # surfaces its guidance as the block message; the labeled MODIFY_ACTION
+        # extension (ArxivApiGuardPF) is surfaced as guidance rather than
+        # silently rewriting the host call. Returning None = allow.
+        if self.skill_pfs is None:
             return None
-        # Layer active but no contract corpus wired in this slice -> allow.
+        history = []
+        with self._lock:
+            history = list(self._trajectories.get(session_id, []))
+        state = AgentState(history=history, memory={})
+        action = ToolCall(name=tool_name, args=args if isinstance(args, dict) else {})
+        execution = self.skill_pfs.apply(state, action)
+        if execution is None:
+            return None
+        self.events.emit(
+            EventKind.PF_FIRED,
+            f"{execution.layer} {execution.pf_name} on `{tool_name}`",
+            tool_name=tool_name,
+            session_id=session_id,
+        )
+        intervention = execution.intervention
+        text = getattr(intervention, "text", None)
+        if isinstance(text, str) and text:
+            return {"action": "block", "message": text}
+        repaired = getattr(intervention, "action", None)
+        if repaired is not None:
+            return {
+                "action": "block",
+                "message": (
+                    f"[skill: {execution.pf_name}] correct this call to: "
+                    f"{repaired.name} {repaired.args}"
+                ),
+            }
         return None
 
     # -- H4 post-execution trajectory monitor (gate-free) ---------------------
