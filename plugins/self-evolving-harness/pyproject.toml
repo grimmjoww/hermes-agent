@@ -1,0 +1,22 @@
+[project]
+name = "harness-core"
+version = "0.0.1"
+description = "Self-evolving, persistent 4-layer runtime harness (H2 action gate, H3 env contract, H4 trajectory monitor, H5 procedural skill)."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The plugin dir has an __init__.py (it IS the Hermes plugin package), so use
+# importlib import-mode + pythonpath="." so test modules import standalone and
+# ``harness_core`` resolves top-level — without pytest treating the hyphenated
+# plugin dir as a package.
+addopts = "--import-mode=importlib"
+pythonpath = ["."]

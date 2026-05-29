@@ -1,0 +1,15 @@
+name: self-evolving-harness
+version: 0.2.0
+description: "Self-evolving Hermes harness — 4-layer Life-Harness program-function runtime (H2 action gate, H3 env contract, H4 trajectory/loop monitor, H5 procedural-skill injection) plus a visible self-evolution event stream. H4 watches the tool-call trajectory for repeat loops and surfaces a correction; gate-free per Continual-Harness."
+author: "grimmjoww"
+kind: standalone
+hooks:
+  - on_session_start
+  - pre_tool_call
+  - post_tool_call
+  - on_session_end
+provides_hooks:
+  - on_session_start
+  - pre_tool_call
+  - post_tool_call
+  - on_session_end
