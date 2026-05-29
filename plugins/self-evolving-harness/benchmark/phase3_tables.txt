@@ -1,0 +1,23 @@
+TABLE 1 — Agentic suite (live M2.7, 48 tasks, temp 0, streak_threshold=4)
+family      |     OFF     |     ON      | delta
+----------------------------------------------------
+clean       |  3/3   1.000 |  3/3   1.000 | +0.000
+exploration |  5/5   1.000 |  5/5   1.000 | +0.000
+loop        |  8/8   1.000 |  8/8   1.000 | +0.000
+missing_arg |  8/8   1.000 |  8/8   1.000 | +0.000
+streak      | 13/18  0.722 |  8/18  0.444 | -0.278
+unknown_tool|  5/6   0.833 |  5/6   0.833 | +0.000
+----------------------------------------------------
+OVERALL     | 42/48  0.875 | 37/48  0.771 | -0.104
+ON interventions: 9 (all streak; 0 rescued, 7 derailed near-recoveries)
+
+TABLE 2 — mini-SWE subset (real pytest oracle, real bash via Hermes LocalEnvironment)
+metric          |   OFF    |    ON    
+----------------------------------------
+resolve rate    | 5/5 1.00 | 5/5 1.00
+interventions   |    0     |    0     
+
+CALL COUNT (this Phase-3 session):
+  agentic OFF=192 ON=192  mini-SWE OFF=24 ON=25  t6-probe(streak)=114
+  Phase-3 session total = 547   (+~600 earlier calibration ~= 1147 cumulative)
+  Under 2500 ceiling: True

@@ -1,0 +1,69 @@
+{
+  "steps": [
+    {
+      "name": "plugin_copied_to_user_dir",
+      "pass": true,
+      "detail": "G:/repos/self-evolving-harness/benchmark/_live_plugin_home\\plugins\\self-evolving-harness"
+    },
+    {
+      "name": "plugin_enabled_in_config",
+      "pass": true,
+      "detail": "['self-evolving-harness']"
+    },
+    {
+      "name": "plugin_discovered",
+      "pass": true,
+      "detail": "['browser/browser_use', 'browser/browserbase', 'browser/firecrawl', 'dashboard_auth/nous', 'discord-platform', 'disk-cleanup', 'google_chat-platform', 'google_meet', 'image_gen/fal', 'image_gen/krea', 'image_gen/openai', 'image_gen/openai-codex', 'image_gen/xai', 'irc-platform', 'line-platform', 'mattermost-platform', 'ntfy-platform', 'observability/langfuse', 'security-guidance', 'self-evolving-harness', 'simplex-platform', 'spotify', 'teams-platform', 'teams_pipeline', 'video_gen/fal', 'video_gen/xai', 'web/brave_free', 'web/ddgs', 'web/exa', 'web/firecrawl', 'web/parallel', 'web/searxng', 'web/tavily', 'web/xai']"
+    },
+    {
+      "name": "plugin_enabled",
+      "pass": true,
+      "detail": "None"
+    },
+    {
+      "name": "plugin_has_hooks",
+      "pass": true,
+      "detail": "4"
+    },
+    {
+      "name": "plugin_has_command",
+      "pass": true,
+      "detail": "1"
+    },
+    {
+      "name": "h4_loop_correction_via_real_hook",
+      "pass": true,
+      "detail": "search_files"
+    },
+    {
+      "name": "pre_tool_call_skill_pf_blocks",
+      "pass": true,
+      "detail": "[skill: test-driven-development] You are about to write implementation code, but"
+    },
+    {
+      "name": "harness_command_runs",
+      "pass": true,
+      "detail": "[self-evolving-harness] status |   master switch : ON |   active layers : H4 |   H4 threshold  : 3 identical consecutive"
+    },
+    {
+      "name": "visible_log_written",
+      "pass": true,
+      "detail": "984"
+    }
+  ],
+  "ok": true,
+  "loaded_plugin_info": {
+    "name": "self-evolving-harness",
+    "key": "self-evolving-harness",
+    "kind": "standalone",
+    "version": "0.2.0",
+    "description": "Self-evolving Hermes harness \u2014 4-layer Life-Harness program-function runtime (H2 action gate, H3 env contract, H4 trajectory/loop monitor, H5 procedural-skill injection) plus a visible self-evolution event stream. H4 watches the tool-call trajectory for repeat loops and surfaces a correction; gate-free per Continual-Harness.",
+    "source": "user",
+    "enabled": true,
+    "tools": 0,
+    "hooks": 4,
+    "commands": 1,
+    "error": null
+  },
+  "harness_log_tail": "[session_start] harness session start (model=MiniMax-M2.7 platform=cli)\n[pf_fired] H4 loop detected on `search_files` \u2014 You have called `search_files` with identical arguments 3 times in a row. This is a loop and it is not making progress. Stop repeating it \u2014 try a different action, different arguments, or re-read the task to find what is actually blocking you.\n[pf_fired] H2 skillpf_tdd_red_before_green on `write_file`\n[session_end] harness session end (completed=True interrupted=False)\n[session_start] harness session start (model=MiniMax-M2.7 platform=cli)\n[pf_fired] H4 loop detected on `search_files` \u2014 You have called `search_files` with identical arguments 3 times in a row. This is a loop and it is not making progress. Stop repeating it \u2014 try a different action, different arguments, or re-read the task to find what is actually blocking you.\n[pf_fired] H2 skillpf_tdd_red_before_green on `write_file`\n[session_end] harness session end (completed=True interrupted=False)\n"
+}

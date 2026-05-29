@@ -1,0 +1,51 @@
+{
+  "mode": "ON",
+  "n_tasks": 5,
+  "resolved": 5,
+  "resolve_rate": 1.0,
+  "calls": 25,
+  "wall_s": 58.1,
+  "n_interventions": 0,
+  "logs": [
+    {
+      "task_id": "swe1_offbyone",
+      "resolved": true,
+      "completed_signal": true,
+      "api_calls": 5,
+      "interventions": [],
+      "n_interventions": 0
+    },
+    {
+      "task_id": "swe2_greet",
+      "resolved": true,
+      "completed_signal": true,
+      "api_calls": 5,
+      "interventions": [],
+      "n_interventions": 0
+    },
+    {
+      "task_id": "swe3_maxpair",
+      "resolved": true,
+      "completed_signal": true,
+      "api_calls": 4,
+      "interventions": [],
+      "n_interventions": 0
+    },
+    {
+      "task_id": "swe4_config",
+      "resolved": true,
+      "completed_signal": true,
+      "api_calls": 5,
+      "interventions": [],
+      "n_interventions": 0
+    },
+    {
+      "task_id": "swe5_reverse",
+      "resolved": true,
+      "completed_signal": true,
+      "api_calls": 6,
+      "interventions": [],
+      "n_interventions": 0
+    }
+  ]
+}

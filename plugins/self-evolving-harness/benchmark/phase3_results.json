@@ -1,0 +1,70 @@
+{
+  "generated": "2026-05-29T09:26:20",
+  "model": "MiniMax-M2.7-highspeed (Anthropic Messages API for agentic; OpenAI v1 for mini-SWE)",
+  "temperature": 0.0,
+  "streak_threshold": 4,
+  "agentic_suite": {
+    "n_tasks": 48,
+    "off_overall_rate": 0.875,
+    "on_overall_rate": 0.7708,
+    "off_by_trap": {
+      "clean": 1.0,
+      "exploration": 1.0,
+      "loop": 1.0,
+      "missing_arg": 1.0,
+      "streak": 0.7222,
+      "unknown_tool": 0.8333
+    },
+    "on_by_trap": {
+      "clean": 1.0,
+      "exploration": 1.0,
+      "loop": 1.0,
+      "missing_arg": 1.0,
+      "streak": 0.4444,
+      "unknown_tool": 0.8333
+    },
+    "streak_off": {
+      "ok": 13,
+      "n": 18,
+      "rate": 0.7222
+    },
+    "streak_on": {
+      "ok": 8,
+      "n": 18,
+      "rate": 0.4444
+    },
+    "on_interventions": 9,
+    "calls_off": 192,
+    "calls_on": 192,
+    "verdict": "HARNESS REGRESSED M2.7 this run. Streak OFF 13/18 -> ON 8/18 (-0.278). Of 9 nudges: 0 rescued a loser, 7 derailed a winner. Other 5 families at ceiling, harness neutral (no harm). Single-pass, non-deterministic provider; OFF streak swung from calibrated 0.333 to 0.722 this run, confirming the documented variance. The H4 streak monitor as tuned (threshold=4) is a NET NEGATIVE on live M2.7 because injecting a tool_result disrupts its near-recovery reasoning. NOT a measured improvement."
+  },
+  "mini_swe": {
+    "n_tasks": 5,
+    "off_resolve_rate": 1.0,
+    "on_resolve_rate": 1.0,
+    "off_resolved": 5,
+    "on_resolved": 5,
+    "on_interventions": 0,
+    "calls_off": 24,
+    "calls_on": 25,
+    "oracle": "real pytest exit code (not model self-report); real bash via Hermes LocalEnvironment",
+    "verdict": "RAN (not blocked). M2.7 at ceiling: 5/5 both modes, 0 interventions (never thrashed; read-source -> edit -> re-test). Harness correctly neutral: no false-positive nudges, no harm. No separation at this scale."
+  },
+  "persistence": {
+    "baseline_off_rate": 0.25,
+    "parent_learned_rate": 1.0,
+    "fresh_process_reload_rate": 1.0,
+    "delta_pp": 0.75,
+    "n_admitted_pfs": 5,
+    "kept_across_process_boundary": true,
+    "note": "Offline deterministic evolution suite (agent_env). Parent learns+admits 5 PFs via try_admit gate, persists to FileRuleStore; a SEPARATE process reloads only from disk and re-measures 1.0 -> gain retained across restart."
+  },
+  "call_budget": {
+    "agentic_calls": 384,
+    "swe_calls": 49,
+    "phase3_session_total": 433,
+    "plus_calibration_earlier": "~600",
+    "rate_limit": "15000 / 5h",
+    "under_2500_ceiling": true
+  }
+}
