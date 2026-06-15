@@ -86,3 +86,28 @@ export function appViewForPath(pathname: string): AppView {
 
   return APP_VIEW_BY_PATH.get(pathname) ?? 'chat'
 }
+
+// Dashboard plugin icons are declared as web/lucide names (e.g. "Package") in
+// the manifest, but the desktop sidebar renders the codicon font. Map the names
+// kanban + the bundled plugins use to codicon glyphs; unknown names fall back to
+// a neutral "extensions" puzzle-piece glyph so a new plugin still gets an icon.
+const PLUGIN_ICON_CODICON: Record<string, string> = {
+  Package: 'package',
+  LayoutGrid: 'layout',
+  Kanban: 'project',
+  Columns: 'layout',
+  Boxes: 'package',
+  Box: 'package',
+  Activity: 'pulse',
+  Zap: 'zap',
+  Heart: 'heart',
+  Star: 'star-full',
+  Code: 'code',
+  Eye: 'eye',
+  Puzzle: 'extensions'
+}
+
+/** Resolve a plugin manifest icon name to a codicon glyph for the sidebar. */
+export function pluginIconCodicon(name: string | undefined): string {
+  return (name && PLUGIN_ICON_CODICON[name]) || 'extensions'
+}

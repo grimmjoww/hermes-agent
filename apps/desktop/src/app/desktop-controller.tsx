@@ -9,6 +9,7 @@ import { DesktopOnboardingOverlay } from '@/components/desktop-onboarding-overla
 import { GatewayConnectingOverlay } from '@/components/gateway-connecting-overlay'
 import { Pane, PaneMain } from '@/components/pane-shell'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { PluginPage, usePlugins } from '@/plugins'
 import { useSkinCommand } from '@/themes/use-skin-command'
 
 import { formatRefValue } from '../components/assistant-ui/directive-text'
@@ -101,7 +102,7 @@ import { ModelVisibilityOverlay } from './model-visibility-overlay'
 import { RightSidebarPane } from './right-sidebar'
 import { $terminalTakeover } from './right-sidebar/store'
 import { PersistentTerminal, TerminalSlot } from './right-sidebar/terminal/persistent'
-import { CRON_ROUTE, NEW_CHAT_ROUTE, routeSessionId, sessionRoute, SETTINGS_ROUTE } from './routes'
+import { CRON_ROUTE, NEW_CHAT_ROUTE, pluginIconCodicon, routeSessionId, sessionRoute, SETTINGS_ROUTE } from './routes'
 import { SessionPickerOverlay } from './session-picker-overlay'
 import { SessionSwitcher } from './session-switcher'
 import { useContextSuggestions } from './session/hooks/use-context-suggestions'
@@ -122,6 +123,7 @@ import { ModelMenuPanel } from './shell/model-menu-panel'
 import type { StatusbarItem } from './shell/statusbar-controls'
 import type { TitlebarTool } from './shell/titlebar-controls'
 import { useGroupRegistry } from './shell/use-group-registry'
+import type { PluginNavItem } from './types'
 import { UpdatesOverlay } from './updates-overlay'
 
 const AgentsView = lazy(async () => ({ default: (await import('./agents')).AgentsView }))
@@ -189,6 +191,11 @@ export function DesktopController() {
   const queryClient = useQueryClient()
   const location = useLocation()
   const navigate = useNavigate()
+
+  // Dashboard plugins (kanban, …). usePlugins fetches manifests from the backend
+  // and injects each plugin's <script>/<link>; the bundle calls register(),
+  // resolved by <PluginPage>. Mirrors web/src/App.tsx's plugin mount.
+  const { manifests: pluginManifests } = usePlugins()
 
   const busyRef = useRef(false)
   const creatingSessionRef = useRef(false)
@@ -856,8 +863,29 @@ export function DesktopController() {
     toggleCommandCenter
   })
 
+  // Plugin tabs (kanban, …) rendered as sidebar nav rows alongside the built-in
+  // tabs. The manifest's `tab.path` is the same absolute route registered in the
+  // <Routes> below, so navigate(route) (via selectSidebarItem) lands on the
+  // <PluginPage>. hidden/override plugins don't get a sidebar row (they need the
+  // web's override-merge handling kanban doesn't). position hints
+  // ("after:skills") are honored by the sidebar's nav builder.
+  const pluginNav = useMemo<PluginNavItem[]>(
+    () =>
+      pluginManifests
+        .filter(m => !m.tab.hidden && !m.tab.override)
+        .map(m => ({
+          id: m.name,
+          label: m.label,
+          iconName: pluginIconCodicon(m.icon),
+          route: m.tab.path,
+          position: m.tab.position
+        })),
+    [pluginManifests]
+  )
+
   const sidebar = (
     <ChatSidebar
+      activePluginPath={routeSessionId(location.pathname) ? null : location.pathname}
       currentView={currentView}
       onArchiveSession={sessionId => void archiveSession(sessionId)}
       onDeleteSession={sessionId => void removeSession(sessionId)}
@@ -876,6 +904,7 @@ export function DesktopController() {
           .then(() => refreshCronJobs())
           .catch(() => undefined)
       }}
+      pluginNav={pluginNav}
     />
   )
 
@@ -1121,6 +1150,28 @@ export function DesktopController() {
           <Route element={null} path="agents" />
           <Route element={<Navigate replace to={NEW_CHAT_ROUTE} />} path="new" />
           <Route element={<LegacySessionRedirect />} path="sessions/:sessionId" />
+          {/*
+            Dashboard plugin routes (kanban, …). Mirrors web/src/App.tsx's
+            buildRoutes addon path: a plugin declares `tab.path` (e.g. "/kanban")
+            and its bundle registers a component resolved by <PluginPage>. Web
+            routes are absolute because its <Routes> is the top-level router;
+            this nested <Routes> uses RELATIVE paths, so strip the leading slash
+            (HashRouter still produces `#/kanban`). Hidden/override plugins are
+            skipped — they need the web's override-merge handling kanban doesn't.
+          */}
+          {pluginManifests
+            .filter((m) => !m.tab.hidden && !m.tab.override)
+            .map((m) => (
+              <Route
+                element={
+                  <Suspense fallback={null}>
+                    <PluginPage name={m.name} />
+                  </Suspense>
+                }
+                key={`plugin:${m.name}`}
+                path={m.tab.path.replace(/^\//, '')}
+              />
+            ))}
           <Route element={<Navigate replace to={NEW_CHAT_ROUTE} />} path="*" />
         </Routes>
       </PaneMain>
