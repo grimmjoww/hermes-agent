@@ -32,6 +32,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
+import { DESKTOP_PLUGIN_CAPABILITIES } from "./capabilities";
 import {
   api,
   authedFetch,
@@ -166,6 +167,9 @@ export function exposePluginSDK() {
     // Contract version of the plugin SDK surface (see plugins/sdk.d.ts).
     // Bump on backwards-incompatible changes; additive changes don't need it.
     sdkVersion: SDK_CONTRACT_VERSION,
+    // Immutable desktop host capabilities (host id, override routes, valid
+    // slots, tab semantics) — lets cross-host plugins adapt to the desktop.
+    capabilities: DESKTOP_PLUGIN_CAPABILITIES,
     // React core — plugins use these instead of importing react
     React,
     hooks: {

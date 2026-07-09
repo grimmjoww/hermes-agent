@@ -7,6 +7,7 @@ import { PaneShell } from '@/components/pane-shell'
 import { FloatingPet } from '@/components/pet/floating-pet'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { PluginSlot } from '@/plugins/slots'
 import {
   $fileBrowserOpen,
   $panesFlipped,
@@ -172,6 +173,8 @@ export function AppShell({
       )}
 
       <main className="relative z-3 flex min-h-0 w-full flex-1 flex-col overflow-hidden transition-none">
+        <PluginSlot className="shrink-0 pt-(--titlebar-height)" name="header-banner" />
+        <PluginSlot name="backdrop" />
         <PaneShell className="min-h-0 flex-1">
           <div
             aria-hidden="true"
@@ -196,6 +199,7 @@ export function AppShell({
       </main>
 
       {overlays}
+      <PluginSlot name="overlay" />
 
       {/* Keybind map dialog (titlebar ⌨ button / ⌘/). */}
       <KeybindPanel />

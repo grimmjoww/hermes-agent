@@ -94,6 +94,29 @@ export const KNOWN_SLOT_NAMES = [
 
 export type KnownSlotName = (typeof KNOWN_SLOT_NAMES)[number];
 
+/**
+ * The slots the desktop shell actually renders. These are the only valid
+ * targets for `registerSlot` on desktop: the page-scoped entries in
+ * `KNOWN_SLOT_NAMES` (analytics:*, sessions:*, …) belong to dashboard pages
+ * the desktop shell doesn't host, so registering into them would be a silent
+ * no-op — `registerSlot` rejects them instead. This is also the frozen
+ * `slots` list advertised on `window.__HERMES_PLUGIN_SDK__.capabilities`.
+ */
+export const DESKTOP_PLUGIN_SLOT_NAMES = [
+  "backdrop",
+  "header-left",
+  "header-right",
+  "header-banner",
+  "sidebar",
+  "pre-main",
+  "post-main",
+  "footer-left",
+  "footer-right",
+  "overlay",
+] as const;
+
+export type DesktopPluginSlotName = (typeof DESKTOP_PLUGIN_SLOT_NAMES)[number];
+
 type SlotListener = () => void;
 
 interface SlotEntry {
@@ -126,6 +149,12 @@ export function registerSlot(
   slot: string,
   component: React.ComponentType,
 ): void {
+  if (!(DESKTOP_PLUGIN_SLOT_NAMES as readonly string[]).includes(slot)) {
+    console.warn(`[plugins] Desktop does not support the "${slot}" slot.`);
+
+    return;
+  }
+
   const existing = _slotRegistry.get(slot) ?? [];
   const filtered = existing.filter((e) => e.plugin !== plugin);
   filtered.push({ plugin, component });
@@ -173,13 +202,17 @@ interface PluginSlotProps {
   /** Optional content rendered when no plugins have claimed the slot.
    *  Useful for built-in defaults the plugin would replace. */
   fallback?: React.ReactNode;
+  /** When set, registered slot content is wrapped in a `<div>` carrying
+   *  this className (shell layout hooks like the header-banner's titlebar
+   *  offset). Without it, content renders in a Fragment (no wrapper). */
+  className?: string;
 }
 
 /** Render all components registered for a given slot, stacked in order.
  *
  *  Component re-renders when the slot registry changes so plugins that
  *  arrive after initial mount show up without a manual refresh. */
-export function PluginSlot({ name, fallback }: PluginSlotProps) {
+export function PluginSlot({ name, fallback, className }: PluginSlotProps) {
   const [entries, setEntries] = useState<SlotEntry[]>(() => getSlotEntries(name));
 
   useEffect(() => {
@@ -195,11 +228,11 @@ export function PluginSlot({ name, fallback }: PluginSlotProps) {
     return fallback ? React.createElement(Fragment, null, fallback) : null;
   }
 
-  return React.createElement(
-    Fragment,
-    null,
-    ...entries.map((entry) =>
-      React.createElement(entry.component, { key: entry.plugin }),
-    ),
+  const content = entries.map((entry) =>
+    React.createElement(entry.component, { key: entry.plugin }),
   );
+
+  return className
+    ? React.createElement("div", { className }, ...content)
+    : React.createElement(Fragment, null, ...content);
 }

@@ -35,6 +35,7 @@
  *     shape the right boundary for external authors?
  */
 
+import type { DesktopPluginCapabilities } from "./capabilities";
 import type {
   ComponentType,
   createContext as ReactCreateContext,
@@ -104,6 +105,13 @@ export interface PluginRegistry {
 export interface HermesPluginSDK {
   /** Contract version of this SDK surface (see SDK_CONTRACT_VERSION). */
   readonly sdkVersion: string;
+
+  /**
+   * Immutable description of what the desktop host supports (host id, override
+   * routes, valid shell slots, tab semantics). Cross-host plugin bundles read
+   * this to adapt to desktop vs web without hard-coding host assumptions.
+   */
+  readonly capabilities: DesktopPluginCapabilities;
 
   /** React core — use instead of importing/bundling react. */
   React: typeof ReactDefault;

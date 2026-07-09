@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { PluginSlot } from '@/plugins/slots'
 
 // Shared chrome styling for interactive statusbar items (button / link / menu
 // trigger). The 'text' variant intentionally omits hover/transition/disabled.
@@ -70,6 +71,7 @@ export function StatusbarControls({ className, leftItems = [], items = [], ...pr
           horizontal scrollbar across the bottom of the window. Items already
           `truncate` their labels, so clipping is the right behavior. */}
       <div className="flex min-w-0 items-stretch gap-0.5 overflow-x-clip">
+        <PluginSlot name="footer-left" />
         {leftItems
           .filter(item => !item.hidden)
           .map(item => (
@@ -77,6 +79,7 @@ export function StatusbarControls({ className, leftItems = [], items = [], ...pr
           ))}
       </div>
       <div className="flex min-w-0 items-stretch gap-0.5 overflow-x-clip">
+        <PluginSlot name="footer-right" />
         {items
           .filter(item => !item.hidden)
           .map(item => (
