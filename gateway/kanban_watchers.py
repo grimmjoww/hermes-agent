@@ -467,13 +467,80 @@ class GatewayKanbanWatchersMixin:
                                 f"(pid gone); dispatcher will retry"
                             )
                         elif kind == "timed_out":
-                            limit = 0
-                            if ev.payload and ev.payload.get("limit_seconds"):
-                                limit = int(ev.payload["limit_seconds"])
-                            msg = (
-                                f"⏱ {board_tag}{tag}Kanban {sub['task_id']} timed out "
-                                f"(max_runtime={limit}s); will retry"
+                            # ``timed_out`` events come from two distinct
+                            # sources with typed metadata, plus unknown
+                            # legacy payloads. The old template
+                            # ``(max_runtime={limit}s); will retry`` silently
+                            # degraded to ``max_runtime=0s`` for non-wall-clock
+                            # payloads and promised a retry the dispatcher
+                            # could not honour (dependency-gated tasks sit
+                            # in 'todo'; circuit-broken tasks sit in
+                            # 'blocked'). Render accurately per shape and
+                            # reflect the actual post-event state.
+                            # See kanban card t_736d16c8.
+                            payload = ev.payload or {}
+                            task_status = (task.status if task else "") or ""
+                            budget_used = payload.get("budget_used")
+                            budget_max = payload.get("budget_max")
+                            limit_seconds = payload.get("limit_seconds")
+                            error_msg = (
+                                str(payload.get("error") or "")
+                                if isinstance(payload.get("error"), str)
+                                else ""
                             )
+
+                            if (
+                                isinstance(budget_used, int)
+                                and isinstance(budget_max, int)
+                                and "limit_seconds" not in payload
+                            ):
+                                # Goal-budget exhaustion (the worker hit
+                                # the iteration ceiling, not the wall clock).
+                                msg = (
+                                    f"⏱ {board_tag}{tag}Kanban {sub['task_id']} "
+                                    f"timed out — iteration budget exhausted "
+                                    f"({budget_used}/{budget_max})"
+                                )
+                            elif isinstance(limit_seconds, int) and limit_seconds > 0:
+                                # Wall-clock max_runtime expiry.
+                                elapsed = payload.get("elapsed_seconds")
+                                suffix = ""
+                                if isinstance(elapsed, int) and elapsed >= 0:
+                                    suffix = f" (elapsed {elapsed}s)"
+                                msg = (
+                                    f"⏱ {board_tag}{tag}Kanban {sub['task_id']} "
+                                    f"timed out — max_runtime={limit_seconds}s"
+                                    f"{suffix}"
+                                )
+                            else:
+                                # Unknown / legacy payload: fail closed to
+                                # a truthful generic message that surfaces
+                                # the actual cause (error string) rather
+                                # than fabricating a max_runtime=0s.
+                                detail = ""
+                                if error_msg:
+                                    # Keep the error readable; the legacy
+                                    # payloads truncate at the source.
+                                    detail = f" — {error_msg[:160]}"
+                                msg = (
+                                    f"⏱ {board_tag}{tag}Kanban {sub['task_id']} "
+                                    f"timed out{detail}"
+                                )
+
+                            # Retry wording: only promise a retry when the
+                            # task is actually re-eligible. The dispatcher
+                            # can only re-spawn a task whose status is
+                            # 'ready'. A dependency-gated ('todo') or
+                            # circuit-broken ('blocked') task sits silent
+                            # until the upstream resolves — promise
+                            # nothing (or, more usefully, name the actual
+                            # post-event state).
+                            if task_status == "ready":
+                                msg += "; will retry"
+                            elif task_status == "todo":
+                                msg += "; awaiting parent"
+                            elif task_status == "blocked":
+                                msg += "; blocked"
                         elif kind == "status":
                             new_status = ""
                             if ev.payload and ev.payload.get("status"):

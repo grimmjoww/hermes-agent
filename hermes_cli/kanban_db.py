@@ -8026,16 +8026,25 @@ def _record_task_failure(
                     (failures, error[:500], task_id),
                 )
             if end_run:
-                # Spawn path: close the open run with outcome.
+                # Spawn path: close the open run with outcome. The
+                # typed extras (budget_used/budget_max from goal-budget
+                # exhaustion, or pid/sigkill from wall-clock timeout)
+                # MUST reach the persisted event row — without them the
+                # notifier cannot distinguish goal-budget exhaustion
+                # from wall-clock timeout and falls back to a generic
+                # "max_runtime=0s" template. #t_736d16c8.
                 run_id = _end_run(
                     conn, task_id,
                     outcome=outcome, status=outcome,
                     error=error[:500],
                     metadata={"failures": failures},
                 )
+                payload = {"error": error[:500], "failures": failures}
+                if event_payload_extra:
+                    payload.update(event_payload_extra)
                 _append_event(
                     conn, task_id, outcome,
-                    {"error": error[:500], "failures": failures},
+                    payload,
                     run_id=run_id,
                 )
             # Timeout/crash path's caller already emitted its own event.
