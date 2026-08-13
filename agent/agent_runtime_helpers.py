@@ -3234,6 +3234,13 @@ def repair_tool_call(agent, tool_name: str) -> str | None:
 # make the provider reject the whole request. Kept identical to the stub-
 # creation placeholder in chat_completion_helpers so a healed transcript reads
 # consistently whether the empty turn was caught at write time or send time.
+#
+# Format: ``[response interrupted — {reason}]``. The reason surfaces WHAT stopped
+# the turn (peer reset, stall-kill, max-tokens, user interrupt, etc.) so the
+# user and the next agent both see the actual interruption rather than a generic
+# blank — the gap that hid the previous ``[response interrupted]`` text and made
+# both sides guess at the cause. The default reason is honest about the gap
+# until a future patch wires the actual stop_reason through the call chain.
 _INTERRUPTED_PLACEHOLDER = "[response interrupted]"
 
 
@@ -3287,6 +3294,7 @@ def _msg_has_payload(msg: Dict[str, Any]) -> bool:
 
 def repair_empty_non_final_messages(
     messages: List[Dict[str, Any]],
+    interruption_reason: str = "stream interrupted before any content was produced",
 ) -> List[Dict[str, Any]]:
     """Heal empty-content non-final messages before they reach the provider.
 
@@ -3334,7 +3342,7 @@ def repair_empty_non_final_messages(
         ):
             # Shallow-copy so stored history / prompt caching stays byte-stable.
             fixed = dict(msg)
-            fixed["content"] = _INTERRUPTED_PLACEHOLDER
+            fixed["content"] = f"[response interrupted — {interruption_reason}]"
             repaired.append(fixed)
             healed += 1
         else:
